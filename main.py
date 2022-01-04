@@ -22,10 +22,9 @@ SEARCH_URL = "https://api.twitter.com/2/tweets/search/recent"
 
 # List of queries to be made and plotted
 queries = []
-queries.append("Manchester City")
+queries.append("Manchester United")
 queries.append("Liverpool FC")
 queries.append("Chelsea FC")
-queries.append("Arsenal FC")
 
 
 # Load model.
@@ -56,11 +55,15 @@ def get_response(url, params):
 # The sentiment of each tweet is calculated and the average is returned
 def calculate_sentiment(json_response, model):
     sentiments = []
-    for tweet in json_response["data"]:
-        text_vec = np.array([nlp(tweet["text"]).vector])
-        sentiments.append(model.predict(text_vec)[0][0])
-    classes = [1 if i > 0.5 else 0 for i in sentiments]
-    return sum(classes)/len(classes)
+    try:
+        for tweet in json_response["data"]:
+            text_vec = np.array([nlp(tweet["text"]).vector])
+            sentiments.append(model.predict(text_vec)[0][0])
+        classes = [1 if i > 0.5 else 0 for i in sentiments]
+        return sum(classes)/len(classes)
+    except:
+        return 0.5
+
 
 
 # Converts datetime object into suitable string format for Twitter API
@@ -111,9 +114,12 @@ plt.gca().xaxis.set_major_locator(mdates.DayLocator())
 # Loops through the queries and plots each sentiment over time.
 for q in queries:
     results = produce_sentiments('"'+ q + '" -(is:retweet) lang:en', MAX_RESULTS, N_DATA_POINTS)
-    plt.plot(results.date, results.sentiment, label=q)
+    plt.plot(results.date, results.sentiment, label=q, marker='.')
 
 
 plt.legend()
+plt.ylabel("Sentiment")
+plt.xlabel("Date")
+plt.title("Sentiment over time")
 plt.gcf().autofmt_xdate()
 plt.show()
